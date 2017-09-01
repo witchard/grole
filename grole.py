@@ -1,5 +1,6 @@
 import asyncio
 import socket
+import json
 
 class Request:
     """
@@ -29,7 +30,7 @@ class Request:
 
         # TODO implement chunked handling
         self.content_remaining = int(self.headers.get('Content-Length', 0))
-        self.body = ''
+        self.data = ''
 
     async def _readline(self):
         """
@@ -42,15 +43,27 @@ class Request:
 
     async def buffer_body(self):
         """
-        Bufferes the body of the request into body
+        Buffers the body of the request
         """
         if self.content_remaining > 0:
             try:
-                self.body = await self.reader.readexactly(self.content_remaining)
+                self.data = await self.reader.readexactly(self.content_remaining)
                 self.content_remaining = 0
             except asyncio.IncompleteReadError:
                 self.content_remaining = 0
                 raise EOFError()
+
+    def body(self):
+        """
+        Decodes body as string - must be called after buffer_body
+        """
+        return self.data.decode()
+
+    def json(self):
+        """
+        Decodes json object from the body - must be called after buffer_body
+        """
+        return json.loads(self.body())
 
 async def handle_echo(reader, writer):
     peer = writer.get_extra_info('peername')
@@ -62,7 +75,7 @@ async def handle_echo(reader, writer):
             await req.buffer_body()
             print(req.method, req.location, req.version)
             print(req.headers)
-            print(req.body.decode())
+            print(req.json())
             writer.write(b'HTTP/1.1 404 Not Found\r\nServer: grole/0.1\r\nContent-Length: 0\r\n\r\n')
             await writer.drain()
             print('Handled request')
