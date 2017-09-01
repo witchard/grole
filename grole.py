@@ -71,6 +71,60 @@ class Request:
         """
         return json.loads(self.body())
 
+class ResponseBody:
+    """
+    Response body from a byte string
+    """
+    def __init__(self, data=b''):
+        """
+        Initialise object, data is the data to send
+        """
+        self._headers = {'Content-Length': len(data),
+                         'Content-Type': 'text/plain'}
+        self._data = data
+
+    def set_headers(self, headers):
+        """
+        Merge internal headers into the passed in dictionary
+        """
+        headers.update(self._headers)
+
+    async def write(self, writer):
+        """
+        Write out the data
+        """
+        writer.write(self._data)
+        await writer.drain()
+
+class Response:
+    """
+    Represents a single HTTP response
+
+    The write method sends the response. The following attributes are used to
+    construct it:
+      version  The response version, default HTTP/1.1
+      code     The response code, default 200
+      reason   The response reason, default OK
+      headers  Dictionary of response headers, default is a Server header
+      data     Object to send e.g. ResponseBody / ResponseJSON
+    """
+    def __init__(self, code=200, reason='OK', headers={}, data=ResponseBody(),
+                 version='HTTP/1.1'):
+        self.version = version
+        self.code = code
+        self.reason = reason
+        self.data = data
+        self.headers = {'Server': 'grole/0.1'}
+        self.data.set_headers(self.headers) # Update headers from data
+        self.headers.update(headers) # Update headers from user
+
+    async def write(self, writer):
+        start_line = '{} {} {}\r\n'.format(self.version, self.code, self.reason)
+        header = start_line + '\r\n'.join(['{}: {}'.format(x[0], x[1]) for x in self.headers.items()]) + '\r\n\r\n'
+        writer.write(header.encode())
+        await writer.drain()
+        await self.data.write(writer)
+
 async def handle_echo(reader, writer):
     peer = writer.get_extra_info('peername')
     print('New connection from {}'.format(peer))
@@ -81,8 +135,8 @@ async def handle_echo(reader, writer):
             print(req.method, req.location, req.version)
             print(req.headers)
             print(req.json())
-            writer.write(b'HTTP/1.1 404 Not Found\r\nServer: grole/0.1\r\nContent-Length: 0\r\n\r\n')
-            await writer.drain()
+            res = Response()
+            await res.write(writer)
             print('Handled request')
     except EOFError:
         print('Connection closed from {}'.format(peer))
