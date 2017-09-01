@@ -28,8 +28,8 @@ class Request:
             self.headers[header[0]] = header[1].strip()
 
         # TODO implement chunked handling
-        self._content_remaining = self.headers.get('Content-Length', 0)
-        self._buffered = ''
+        self.content_remaining = int(self.headers.get('Content-Length', 0))
+        self.body = ''
 
     async def _readline(self):
         """
@@ -40,6 +40,18 @@ class Request:
             raise EOFError()
         return ret
 
+    async def buffer_body(self):
+        """
+        Bufferes the body of the request into body
+        """
+        if self.content_remaining > 0:
+            try:
+                self.body = await self.reader.readexactly(self.content_remaining)
+                self.content_remaining = 0
+            except asyncio.IncompleteReadError:
+                self.content_remaining = 0
+                raise EOFError()
+
 async def handle_echo(reader, writer):
     peer = writer.get_extra_info('peername')
     print('New connection from {}'.format(peer))
@@ -47,8 +59,10 @@ async def handle_echo(reader, writer):
         while True:
             req = Request(reader)
             await req._init()
+            await req.buffer_body()
             print(req.method, req.location, req.version)
             print(req.headers)
+            print(req.body.decode())
             writer.write(b'HTTP/1.1 404 Not Found\r\nServer: grole/0.1\r\nContent-Length: 0\r\n\r\n')
             await writer.drain()
             print('Handled request')
