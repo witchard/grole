@@ -6,51 +6,42 @@ class Request:
     """
     Handles a single HTTP request
     """
-    def __init__(self, reader):
+    async def _init(self, reader):
         """
-        Initialise
+        Perform initialisation - Parses HTTP request headers and body
         """
-        self.reader = reader
-
-    async def _init(self):
-        """
-        Perform initialisation
-        Parses HTTP request headers, this needs to be async so we can't do it in
-        init.
-        """
-        start_line = await self._readline()
+        start_line = await self._readline(reader)
         self.method, self.location, self.version = start_line.decode().split()
         self.headers = {}
         while True:
-            header_raw = await self._readline()
+            header_raw = await self._readline(reader)
             if header_raw.strip() == b'':
                 break
             header = header_raw.decode().split(':', 1)
             self.headers[header[0]] = header[1].strip()
 
         # TODO implement chunked handling
-        self.content_remaining = int(self.headers.get('Content-Length', 0))
         self.data = ''
+        await self._buffer_body(reader)
 
-    async def _readline(self):
+    async def _readline(self, reader):
         """
         Readline helper
         """
-        ret = await self.reader.readline()
-        if len(ret) == 0 and self.reader.at_eof():
+        ret = await reader.readline()
+        if len(ret) == 0 and reader.at_eof():
             raise EOFError()
         return ret
 
-    async def buffer_body(self):
+    async def _buffer_body(self, reader):
         """
         Buffers the body of the request
         """
-        if self.content_remaining > 0:
+        remaining = int(self.headers.get('Content-Length', 0))
+        if remaining > 0:
             try:
-                self.data = await self.reader.readexactly(self.content_remaining)
-                self.content_remaining = 0
+                self.data = await reader.readexactly(remaining)
             except asyncio.IncompleteReadError:
-                self.content_remaining = 0
                 raise EOFError()
 
     def body(self):
@@ -70,9 +61,8 @@ async def handle_echo(reader, writer):
     print('New connection from {}'.format(peer))
     try:
         while True:
-            req = Request(reader)
-            await req._init()
-            await req.buffer_body()
+            req = Request()
+            await req._init(reader)
             print(req.method, req.location, req.version)
             print(req.headers)
             print(req.json())
