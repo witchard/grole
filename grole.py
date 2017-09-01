@@ -2,12 +2,18 @@ import asyncio
 import socket
 import pprint
 
+async def readline(reader):
+    ret = await reader.readline()
+    if len(ret) == 0 and reader.at_eof():
+        raise EOFError()
+    return ret
+
 async def get_header(reader):
-    start_line = await reader.readline()
+    start_line = await readline(reader)
     method, location, version = start_line.decode().split()
     headers = {}
     while True:
-        header_raw = await reader.readline()
+        header_raw = await readline(reader)
         if header_raw.strip() == b'':
             break
         header = header_raw.decode().split(':', 1)
@@ -16,13 +22,17 @@ async def get_header(reader):
             'headers': headers}
 
 async def handle_echo(reader, writer):
-    print("New connection from {}".format(writer.get_extra_info('peername')))
-    while True:
-        req = await get_header(reader)
-        pprint.pprint(req)
-        writer.write(b'HTTP/1.1 404 Not Found\r\nServer: grole/0.1\r\nContent-Length: 0\r\n\r\n')
-        await writer.drain()
-        print('Handled request')
+    peer = writer.get_extra_info('peername')
+    print('New connection from {}'.format(peer))
+    try:
+        while True:
+            req = await get_header(reader)
+            pprint.pprint(req)
+            writer.write(b'HTTP/1.1 404 Not Found\r\nServer: grole/0.1\r\nContent-Length: 0\r\n\r\n')
+            await writer.drain()
+            print('Handled request')
+    except EOFError:
+        print('Connection closed from {}'.format(peer))
 
 
 loop = asyncio.get_event_loop()
