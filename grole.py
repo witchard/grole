@@ -4,15 +4,31 @@ import json
 
 class Request:
     """
-    Handles a single HTTP request
+    Represents a single HTTP request
+
+    The read method parses a request. The following attributes are filled in
+    with the details:
+      method   The request method
+      location The request location / path
+      version  The request version, e.g. HTTP/1.1
+      headers  Dictionary of headers from the request
+      data     Raw data from the request body
+
+    The body() and json() methods  are provided to access the body in a more
+    sane manner.
     """
-    async def _init(self, reader):
+    method = ''
+    location = ''
+    version = ''
+    headers = {}
+    data = b''
+
+    async def read(self, reader):
         """
-        Perform initialisation - Parses HTTP request headers and body
+        Parses HTTP request into the classess attributes
         """
         start_line = await self._readline(reader)
         self.method, self.location, self.version = start_line.decode().split()
-        self.headers = {}
         while True:
             header_raw = await self._readline(reader)
             if header_raw.strip() == b'':
@@ -21,7 +37,6 @@ class Request:
             self.headers[header[0]] = header[1].strip()
 
         # TODO implement chunked handling
-        self.data = ''
         await self._buffer_body(reader)
 
     async def _readline(self, reader):
@@ -46,13 +61,13 @@ class Request:
 
     def body(self):
         """
-        Decodes body as string - must be called after buffer_body
+        Decodes body as string
         """
         return self.data.decode()
 
     def json(self):
         """
-        Decodes json object from the body - must be called after buffer_body
+        Decodes json object from the body
         """
         return json.loads(self.body())
 
@@ -62,7 +77,7 @@ async def handle_echo(reader, writer):
     try:
         while True:
             req = Request()
-            await req._init(reader)
+            await req.read(reader)
             print(req.method, req.location, req.version)
             print(req.headers)
             print(req.json())
