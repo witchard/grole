@@ -1,12 +1,19 @@
+"""
+Grole is a simple asyncio based web framework
+"""
 import asyncio
 import socket
 import json
+import re
+import traceback
+from collections import defaultdict
+
 
 class Request:
     """
     Represents a single HTTP request
 
-    The read method parses a request. The following attributes are filled in
+    The read method parses a request. The following members are filled in
     with the details:
       method   The request method
       location The request location / path
@@ -17,18 +24,14 @@ class Request:
     The body() and json() methods  are provided to access the body in a more
     sane manner.
     """
-    method = ''
-    location = ''
-    version = ''
-    headers = {}
-    data = b''
 
     async def read(self, reader):
         """
-        Parses HTTP request into the classess attributes
+        Parses HTTP request into member variables
         """
         start_line = await self._readline(reader)
         self.method, self.location, self.version = start_line.decode().split()
+        self.headers = {}
         while True:
             header_raw = await self._readline(reader)
             if header_raw.strip() == b'':
@@ -37,6 +40,7 @@ class Request:
             self.headers[header[0]] = header[1].strip()
 
         # TODO implement chunked handling
+        self.data = b''
         await self._buffer_body(reader)
 
     async def _readline(self, reader):
@@ -100,7 +104,7 @@ class Response:
     """
     Represents a single HTTP response
 
-    The write method sends the response. The following attributes are used to
+    The write method sends the response. The following members are used to
     construct it:
       version  The response version, default HTTP/1.1
       code     The response code, default 200
@@ -125,36 +129,97 @@ class Response:
         await writer.drain()
         await self.data.write(writer)
 
-async def handle_echo(reader, writer):
-    peer = writer.get_extra_info('peername')
-    print('New connection from {}'.format(peer))
-    try:
-        while True:
-            req = Request()
-            await req.read(reader)
-            print(req.method, req.location, req.version)
-            print(req.headers)
-            print(req.json())
-            res = Response()
-            await res.write(writer)
-            print('Handled request')
-    except EOFError:
-        print('Connection closed from {}'.format(peer))
+
+class Grole:
+    """
+    Webserver itself
+    """
+    def __init__(self):
+        self._handlers = defaultdict(list)
+
+    def route(self, path_regex, methods=['GET']):
+        """
+        Decorator to register a handler
+
+        For example:
+        app = Grole()
+        @app.route('/')
+        def index(path_match, req):
+          return 'Hello, World!'
+        app.run()
+        """
+        def register_func(func):
+            """
+            Decorator implementation
+            """
+            for method in methods:
+                self._handlers[method].append((re.compile(path_regex), func))
+            return func # Return the original function
+        return register_func # Decorator
+
+    async def handle(self, reader, writer):
+        """
+        Handle a single TCP connection
+
+        Parses requests, finds appropriate handlers and returns responses
+        """
+        peer = writer.get_extra_info('peername')
+        print('New connection from {}'.format(peer))
+        try:
+            # Loop handling requests
+            while True:
+                # Read the request
+                req = Request()
+                await req.read(reader)
+
+                # Find and execute handler
+                res = None
+                for path_regex, handler in self._handlers.get(req.method, []):
+                    match = path_regex.fullmatch(req.location)
+                    if match:
+                        req.match = match
+                        try:
+                            res = handler(req)
+                        except:
+                            traceback.print_exc()
+                            res = Response(code=500, reason='Internal Server Error')
+                        break
+
+                # No handler - send 404
+                if res == None:
+                    res = Response(code=404, reason='Not Found')
+
+                # Respond
+                await res.write(writer)
+                print('{}: {} -> {}'.format(peer, req.location,  res.code))
+        except EOFError:
+            print('Connection closed from {}'.format(peer))
+
+    def run(self, host='localhost', port=1234):
+        # Setup loop
+        loop = asyncio.get_event_loop()
+        coro = asyncio.start_server(self.handle, host, port, loop=loop)
+        server = loop.run_until_complete(coro)
+
+        # Run the server
+        print('Serving on {}'.format(server.sockets[0].getsockname()))
+        try:
+            loop.run_forever()
+        except KeyboardInterrupt:
+            pass
+
+        # Close the server
+        server.close()
+        loop.run_until_complete(server.wait_closed())
+        loop.close()
 
 
-loop = asyncio.get_event_loop()
-coro = asyncio.start_server(handle_echo, 'localhost', 1234, loop=loop)
-server = loop.run_until_complete(coro)
+if __name__ == '__main__':
+    app = Grole()
 
-# Serve requests until Ctrl+C is pressed
-print(socket.gethostname())
-print('Serving on {}'.format(server.sockets[0].getsockname()))
-try:
-    loop.run_forever()
-except KeyboardInterrupt:
-    pass
+    @app.route('/(\d+)')
+    def index(req):
+        ret = 'Hello, World!' * int(req.match.group(1))
+        return Response(data=ResponseBody(ret.encode()))
 
-# Close the server
-server.close()
-loop.run_until_complete(server.wait_closed())
-loop.close()
+    app.run()
