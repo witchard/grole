@@ -100,6 +100,21 @@ class ResponseBody:
         writer.write(self._data)
         await writer.drain()
 
+class ResponseString(ResponseBody):
+    """
+    Response body from a string
+    """
+    def __init__(self, data=''):
+        super().__init__(data.encode())
+
+class ResponseJSON(ResponseString):
+    """
+    Response body encoded in json
+    """
+    def __init__(self, data=''):
+        super().__init__(json.dumps(data))
+        self._headers['Content-Type'] = 'application/json'
+
 class Response:
     """
     Represents a single HTTP response
@@ -112,27 +127,39 @@ class Response:
       headers  Dictionary of response headers, default is a Server header
       data     Object to send e.g. ResponseBody / ResponseJSON
     """
-    def __init__(self, code=200, reason='OK', headers={}, data=ResponseBody(),
+    def __init__(self, data=None, code=200, reason='OK', headers={},
                  version='HTTP/1.1'):
         self.version = version
         self.code = code
         self.reason = reason
-        self.data = data
+        self.data = self._create_body(data)
         self.headers = {'Server': 'grole/0.1'}
         self.data.set_headers(self.headers) # Update headers from data
         self.headers.update(headers) # Update headers from user
 
     async def write(self, writer):
         start_line = '{} {} {}\r\n'.format(self.version, self.code, self.reason)
-        header = start_line + '\r\n'.join(['{}: {}'.format(x[0], x[1]) for x in self.headers.items()]) + '\r\n\r\n'
+        headers = ['{}: {}'.format(x[0], x[1]) for x in self.headers.items()] 
+        header = start_line + '\r\n'.join(headers) + '\r\n\r\n'
         writer.write(header.encode())
         await writer.drain()
         await self.data.write(writer)
 
+    def _create_body(self, data):
+        if isinstance(data, ResponseBody):
+            return data
+        elif data is None:
+            return ResponseBody()
+        elif isinstance(data, bytes):
+            return ResponseBody(data)
+        elif isinstance(data, str):
+            return ResponseString(data)
+        else:
+            return ResponseJSON(data)
 
 class Grole:
     """
-    Webserver itself
+    A Grole Webserver
     """
     def __init__(self):
         self._handlers = defaultdict(list)
@@ -178,8 +205,12 @@ class Grole:
                     match = path_regex.fullmatch(req.location)
                     if match:
                         req.match = match
+                        req.env = self.env
                         try:
                             res = handler(req)
+                            if type(res) != Response:
+                                # Assume that the user has returned some form of body
+                                res = Response(data=res)
                         except:
                             traceback.print_exc()
                             res = Response(code=500, reason='Internal Server Error')
@@ -216,10 +247,15 @@ class Grole:
 
 if __name__ == '__main__':
     app = Grole()
+    app.env = {'message': 'Hello, World!'}
 
     @app.route('/(\d+)')
     def index(req):
-        ret = 'Hello, World!' * int(req.match.group(1))
-        return Response(data=ResponseBody(ret.encode()))
+        times = int(req.match.group(1))
+        return {'result': req.env['message']*times, 'times': times}
+
+    @app.route('/message', methods=['POST'])
+    def update(req):
+        req.env['message'] = req.body()
 
     app.run()
