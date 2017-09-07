@@ -6,6 +6,7 @@ import socket
 import json
 import re
 import traceback
+import inspect
 from collections import defaultdict
 
 
@@ -207,11 +208,14 @@ class Grole:
                     if match:
                         req.match = match
                         try:
-                            res = handler(self.env, req)
-                            if type(res) != Response:
-                                # Assume that the user has returned some form of body
+                            if inspect.iscoroutinefunction(handler):
+                                res = await handler(self.env, req)
+                            else:
+                                res = handler(self.env, req)
+                            if not isinstance(res, Response):
                                 res = Response(data=res)
                         except:
+                            # Error - log it and return 500
                             traceback.print_exc()
                             res = Response(code=500, reason='Internal Server Error')
                         break
@@ -257,5 +261,10 @@ if __name__ == '__main__':
     @app.route('/message', methods=['POST'])
     def update(env, req):
         env['message'] = req.body()
+
+    
+    @app.route('/sleep')
+    async def sleep(env, req):
+        await asyncio.sleep(2)
 
     app.run()
