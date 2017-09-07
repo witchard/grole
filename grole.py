@@ -161,8 +161,9 @@ class Grole:
     """
     A Grole Webserver
     """
-    def __init__(self):
+    def __init__(self, env=None):
         self._handlers = defaultdict(list)
+        self.env = env
 
     def route(self, path_regex, methods=['GET']):
         """
@@ -171,7 +172,7 @@ class Grole:
         For example:
         app = Grole()
         @app.route('/')
-        def index(path_match, req):
+        def index(env, req):
           return 'Hello, World!'
         app.run()
         """
@@ -205,9 +206,8 @@ class Grole:
                     match = path_regex.fullmatch(req.location)
                     if match:
                         req.match = match
-                        req.env = self.env
                         try:
-                            res = handler(req)
+                            res = handler(self.env, req)
                             if type(res) != Response:
                                 # Assume that the user has returned some form of body
                                 res = Response(data=res)
@@ -250,12 +250,12 @@ if __name__ == '__main__':
     app.env = {'message': 'Hello, World!'}
 
     @app.route('/(\d+)')
-    def index(req):
+    def index(env, req):
         times = int(req.match.group(1))
-        return {'result': req.env['message']*times, 'times': times}
+        return {'result': env['message']*times, 'times': times}
 
     @app.route('/message', methods=['POST'])
-    def update(req):
-        req.env['message'] = req.body()
+    def update(env, req):
+        env['message'] = req.body()
 
     app.run()

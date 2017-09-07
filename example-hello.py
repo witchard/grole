@@ -2,16 +2,15 @@
 
 from grole import Grole
 
-app = Grole()
-app.env = {'message': 'Hello, World!'}
+app = Grole({'message': 'Hello, World!'})
 
 @app.route('/(\d+)')
-def index(req):
+def index(env, req):
     times = int(req.match.group(1))
-    return req.env.get('message', '')*times
+    return env.get('message', '')*times
 
 @app.route('/message', methods=['POST'])
-def update(req):
-    req.env['message'] = req.body()
+def update(env, req):
+    env['message'] = req.body()
 
 app.run()
