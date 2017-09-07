@@ -7,6 +7,8 @@ import json
 import re
 import traceback
 import inspect
+import io
+import mimetypes
 from collections import defaultdict
 
 
@@ -115,6 +117,23 @@ class ResponseJSON(ResponseString):
     def __init__(self, data=''):
         super().__init__(json.dumps(data))
         self._headers['Content-Type'] = 'application/json'
+
+class ResponseFile(ResponseBody):
+    def __init__(self, filename):
+        self._file = io.FileIO(filename)
+        self._headers = {'Transfer-Encoding': 'chunked',
+                         'Content-Type': mimetypes.guess_type(filename)[0]}
+
+    async def write(self, writer):
+        while True:
+            data = self._file.read(io.DEFAULT_BUFFER_SIZE)
+            header = format(len(data), 'x') + '\r\n'
+            writer.write(header.encode())
+            writer.write(data)
+            writer.write(b'\r\n')
+            await writer.drain()
+            if len(data) == 0:
+                return # EOF
 
 class Response:
     """
@@ -251,20 +270,9 @@ class Grole:
 
 if __name__ == '__main__':
     app = Grole()
-    app.env = {'message': 'Hello, World!'}
 
-    @app.route('/(\d+)')
-    def index(env, req):
-        times = int(req.match.group(1))
-        return {'result': env['message']*times, 'times': times}
-
-    @app.route('/message', methods=['POST'])
+    @app.route('/static/(.*)')
     def update(env, req):
-        env['message'] = req.body()
-
-    
-    @app.route('/sleep')
-    async def sleep(env, req):
-        await asyncio.sleep(2)
+        return ResponseFile(req.match.group(1))
 
     app.run()
