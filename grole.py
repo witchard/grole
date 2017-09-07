@@ -5,10 +5,13 @@ import asyncio
 import socket
 import json
 import re
+import urllib
 import traceback
 import inspect
 import io
 import mimetypes
+import pathlib
+import html
 from collections import defaultdict
 
 
@@ -34,6 +37,7 @@ class Request:
         """
         start_line = await self._readline(reader)
         self.method, self.location, self.version = start_line.decode().split()
+        self.location = urllib.parse.unquote(self.location) # TODO support ? etc
         self.headers = {}
         while True:
             header_raw = await self._readline(reader)
@@ -177,6 +181,32 @@ class Response:
         else:
             return ResponseJSON(data)
 
+def serve_static(app, base_url, base_path, index=False):
+    @app.route(base_url + '/(.*)')
+    def serve(env, req):
+        base = pathlib.Path(base_path).resolve()
+        path = (base / req.match.group(1)).resolve()
+
+        # Don't let bad paths through
+        if base == path or base in path.parents:
+            if path.is_file():
+                return ResponseFile(str(path))
+            if index and path.is_dir():
+                if base == path:
+                    ret = ''
+                else:
+                    ret = '<a href="../">../</a><br/>\r\n'
+                for item in path.iterdir():
+                    name = item.parts[-1]
+                    if item.is_dir():
+                        name += '/'
+                    ret += '<a href="{}">{}</a><br/>\r\n'.format(urllib.parse.quote(name), html.escape(name))
+                ret = Response(data=ret)
+                ret.headers['Content-Type'] = 'text/html'
+                return ret
+
+        return Response(None, 404, 'Not Found')
+
 class Grole:
     """
     A Grole Webserver
@@ -270,9 +300,5 @@ class Grole:
 
 if __name__ == '__main__':
     app = Grole()
-
-    @app.route('/static/(.*)')
-    def update(env, req):
-        return ResponseFile(req.match.group(1))
-
+    serve_static(app, '', '.', True)
     app.run()
