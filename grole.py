@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 Grole is a simple asyncio based web framework
 """
