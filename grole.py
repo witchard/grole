@@ -189,6 +189,15 @@ class Response:
             return ResponseJSON(data)
 
 def serve_static(app, base_url, base_path, index=False):
+    """
+    Serve a directory statically
+
+    Parameters:
+        app - Grole application object
+        base_url - Base URL to serve from, e.g. /static
+        base_path - Base path to look for files in
+        index - Provide simple directory indexes if True
+    """
     @app.route(base_url + '/(.*)')
     def serve(env, req):
         base = pathlib.Path(base_path).resolve()
