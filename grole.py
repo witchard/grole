@@ -87,12 +87,12 @@ class ResponseBody:
     """
     Response body from a byte string
     """
-    def __init__(self, data=b''):
+    def __init__(self, data=b'', content_type='text/plain'):
         """
         Initialise object, data is the data to send
         """
         self._headers = {'Content-Length': len(data),
-                         'Content-Type': 'text/plain'}
+                         'Content-Type': content_type}
         self._data = data
 
     def set_headers(self, headers):
@@ -112,22 +112,28 @@ class ResponseString(ResponseBody):
     """
     Response body from a string
     """
-    def __init__(self, data=''):
-        super().__init__(data.encode())
+    def __init__(self, data='', content_type='text/plain'):
+        super().__init__(data.encode(), content_type)
 
 class ResponseJSON(ResponseString):
     """
     Response body encoded in json
     """
-    def __init__(self, data=''):
-        super().__init__(json.dumps(data))
-        self._headers['Content-Type'] = 'application/json'
+    def __init__(self, data='', content_type='application/json'):
+        super().__init__(json.dumps(data), content_type)
 
 class ResponseFile(ResponseBody):
-    def __init__(self, filename):
+    """
+    Respond with a file
+
+    Content type is guessed if not provided
+    """
+    def __init__(self, filename, content_type=None):
+        if content_type == None:
+            content_type = mimetypes.guess_type(filename)[0]
         self._file = io.FileIO(filename)
         self._headers = {'Transfer-Encoding': 'chunked',
-                         'Content-Type': mimetypes.guess_type(filename)[0]}
+                         'Content-Type': content_type}
 
     async def write(self, writer):
         while True:
@@ -202,8 +208,7 @@ def serve_static(app, base_url, base_path, index=False):
                     if item.is_dir():
                         name += '/'
                     ret += '<a href="{}">{}</a><br/>\r\n'.format(urllib.parse.quote(name), html.escape(name))
-                ret = Response(data=ret)
-                ret.headers['Content-Type'] = 'text/html'
+                ret = ResponseString(ret, 'text/html')
                 return ret
 
         return Response(None, 404, 'Not Found')
