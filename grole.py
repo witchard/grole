@@ -23,7 +23,9 @@ class Request:
     The read method parses a request. The following members are filled in
     with the details:
       method   The request method
-      location The request location / path
+      location The request location as it is sent
+      path     The unescaped path part of the location
+      query    The query string part of the location (if present)
       version  The request version, e.g. HTTP/1.1
       headers  Dictionary of headers from the request
       data     Raw data from the request body
@@ -38,7 +40,17 @@ class Request:
         """
         start_line = await self._readline(reader)
         self.method, self.location, self.version = start_line.decode().split()
-        self.location = urllib.parse.unquote(self.location) # TODO support ? etc
+        path_query = self.location.split('?', 1)
+        self.path = urllib.parse.unquote(path_query[0])
+        self.query = {}
+        if len(path_query) > 1:
+            for q in path_query[1].split('&'):
+                try:
+                    k, v = q.split('=', 1)
+                    self.query[k] = v
+                except ValueError:
+                    self.query[q] = None
+        print(self.query)
         self.headers = {}
         while True:
             header_raw = await self._readline(reader)
@@ -268,7 +280,7 @@ class Grole:
                 # Find and execute handler
                 res = None
                 for path_regex, handler in self._handlers.get(req.method, []):
-                    match = path_regex.fullmatch(req.location)
+                    match = path_regex.fullmatch(req.path)
                     if match:
                         req.match = match
                         try:
@@ -290,7 +302,7 @@ class Grole:
 
                 # Respond
                 await res.write(writer)
-                print('{}: {} -> {}'.format(peer, req.location,  res.code))
+                print('{}: {} -> {}'.format(peer, req.path,  res.code))
         except EOFError:
             print('Connection closed from {}'.format(peer))
 
