@@ -8,7 +8,7 @@ release:
 	git tag -a -m "Release of $(VERSION)" $(VERSION)    # Fail on existing tags
 	git push origin HEAD                                # Fail on out-of-sync upstream
 	git push origin tag $(VERSION)                      # Fail on dublicate tag
-	python3 setup.py sdist bdist_wheel register upload  # Release to pypi
+	python3 setup.py sdist register upload              # Release to pypi
 
 clean:
 	rm -rf build/ dist/ MANIFEST 2>/dev/null || true
