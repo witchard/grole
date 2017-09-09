@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Grole is a simple asyncio based web framework
+Grole is a python (3.5+) nano web framework based on asyncio. It's goals are to be simple, embedable (single file and standard library only) and easy to use.
 """
 import asyncio
 import socket
@@ -15,6 +15,8 @@ import pathlib
 import html
 from collections import defaultdict
 
+__author__ = 'witchard'
+__version__ = '0.1'
 
 class Request:
     """
@@ -175,7 +177,7 @@ class Response:
         self.code = code
         self.reason = reason
         self.data = self._create_body(data)
-        self.headers = {'Server': 'grole/0.1'}
+        self.headers = {'Server': 'grole/' + __version__}
         self.data.set_headers(self.headers) # Update headers from data
         self.headers.update(headers) # Update headers from user
 
