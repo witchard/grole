@@ -237,8 +237,21 @@ def serve_static(app, base_url, base_path, index=False):
 class Grole:
     """
     A Grole Webserver
+    
+    For example:
+        app = Grole()
+        @app.route('/')
+        def index(env, req):
+          return 'Hello, World!'
+        app.run()
     """
     def __init__(self, env=None):
+        """
+        Initialise a server
+
+        Parameters:
+            env - Passed to request handlers to provide shared state
+        """
         self._handlers = defaultdict(list)
         self.env = env
 
@@ -246,12 +259,9 @@ class Grole:
         """
         Decorator to register a handler
 
-        For example:
-        app = Grole()
-        @app.route('/')
-        def index(env, req):
-          return 'Hello, World!'
-        app.run()
+        Parameters:
+            path_regex - Request path regex to match against for running the handler
+            methods - HTTP methods to use this handler for
         """
         def register_func(func):
             """
