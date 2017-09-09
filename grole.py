@@ -50,7 +50,6 @@ class Request:
                     self.query[k] = v
                 except ValueError:
                     self.query[q] = None
-        print(self.query)
         self.headers = {}
         while True:
             header_raw = await self._readline(reader)
@@ -212,6 +211,9 @@ def serve_static(app, base_url, base_path, index=False):
     """
     @app.route(base_url + '/(.*)')
     def serve(env, req):
+        """
+        Static files
+        """
         base = pathlib.Path(base_path).resolve()
         path = (base / req.match.group(1)).resolve()
 
@@ -234,6 +236,21 @@ def serve_static(app, base_url, base_path, index=False):
 
         return Response(None, 404, 'Not Found')
 
+def serve_doc(app, url):
+    """
+    Serve API documentation
+
+    Parameters:
+        app - Grole application object
+        url - URL to serve at
+    """
+    @app.route(url, doc=False)
+    def index(env, req):
+        ret = ''
+        for d in env['doc']:
+            ret += 'URL: {url}, supported methods: {methods}{doc}\n'.format(**d)
+        return ret
+
 class Grole:
     """
     A Grole Webserver
@@ -245,28 +262,34 @@ class Grole:
           return 'Hello, World!'
         app.run()
     """
-    def __init__(self, env=None):
+    def __init__(self, env={}):
         """
         Initialise a server
 
         Parameters:
             env - Passed to request handlers to provide shared state
+            Note, env by default contains doc which is populated from
+            registered route docstrings.
         """
         self._handlers = defaultdict(list)
-        self.env = env
+        self.env = {'doc': []}
+        self.env.update(env)
 
-    def route(self, path_regex, methods=['GET']):
+    def route(self, path_regex, methods=['GET'], doc=True):
         """
         Decorator to register a handler
 
         Parameters:
             path_regex - Request path regex to match against for running the handler
             methods - HTTP methods to use this handler for
+            doc - Add to internal doc structure
         """
         def register_func(func):
             """
             Decorator implementation
             """
+            if doc:
+                self.env['doc'].append({'url': path_regex, 'methods': ', '.join(methods), 'doc': func.__doc__})
             for method in methods:
                 self._handlers[method].append((re.compile(path_regex), func))
             return func # Return the original function
