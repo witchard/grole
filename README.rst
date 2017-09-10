@@ -1,6 +1,18 @@
 Grole
 =====
 
+.. image:: https://img.shields.io/github/license/witchard/grole.svg
+    :target: https://witchard.mit-license.org
+
+.. image:: https://img.shields.io/pypi/v/grole.svg
+    :target: https://pypi.python.org/pypi/grole
+
+.. image:: https://img.shields.io/pypi/pyversions/grole.svg
+    :target: https://pypi.python.org/pypi/grole
+
+.. image:: https://readthedocs.org/projects/grole/badge/?version=latest
+    :target: https://grole.readthedocs.io
+
 Grole is a python (3.5+) nano web framework based on asyncio. It's goals are to be simple, embedable (single file and standard library only) and easy to use. The authors intention is that it should support standing up quick and dirty web based APIs.
 
 It's loosely based on bottle and flask, but unlike them does not require a WSGI capable server to handle more than one request at once. Sanic is similar, but it does not meet the embedable use-case.
@@ -10,7 +22,7 @@ A grole is a multi-spouted drinking vessel (https://en.wikipedia.org/wiki/Grole)
 Documentation
 -------------
 
-See the doc folder, or visit http://grole.readthedocs.io/en/latest/.
+See the doc folder, or visit https://grole.readthedocs.io.
 
 Example
 -------
