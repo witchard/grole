@@ -11,13 +11,13 @@ help:
 	@echo "clean: Clean all"
 
 doc:
-	make -C doc html
+	make -C docs html
 
 cleandoc:
-	make -C doc clean
+	make -C docs clean
 
 showdoc:
-	python3 -m webbrowser -t "doc/_build/html/index.html"
+	python3 -m webbrowser -t "docs/_build/html/index.html"
 
 release:
 	python3 setup.py --version | egrep -q -v '[a-zA-Z]' # Fail on dev/rc versions

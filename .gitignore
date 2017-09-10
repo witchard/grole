@@ -3,4 +3,4 @@ build/
 dist/
 *egg-info/
 MANIFEST
-doc/_build/
+docs/_build/
