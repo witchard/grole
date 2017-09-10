@@ -1,5 +1,19 @@
-Grole
-=====
+.. Grole documentation master file, created by
+   sphinx-quickstart on Sun Sep 10 20:07:04 2017.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
+
+Welcome to Grole's documentation!
+=================================
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
+
+   install
+   tutorial
+   examples
+   api
 
 Grole is a python (3.5+) nano web framework based on asyncio. It's goals are to be simple, embedable (single file and standard library only) and easy to use. The authors intention is that it should support standing up quick and dirty web based APIs.
 
@@ -7,33 +21,9 @@ It's loosely based on bottle and flask, but unlike them does not require a WSGI 
 
 A grole is a multi-spouted drinking vessel (https://en.wikipedia.org/wiki/Grole), which harks to this modules bottle/flask routes but with the ability to serve multiple drinkers at once!
 
-Example
--------
+Indices and tables
+==================
 
-.. code-block:: python
-
-    from grole import Grole
-
-    app = Grole()
-
-    @app.route('/(.*)?')
-    def index(env, req):
-        name = req.match.group(1) or 'World'
-        return 'Hello, {}!'.format(name)
-
-    app.run()
-
-Run this script and then point your browser at http://localhost:1234/.
-
-Grole also has an inbuilt simple file server which will serve all the files in a directory. Just run `grole.py` or `python -m grole`.
-
-Install
--------
-
-Either download `grole.py` directly from github and place in your project folder, or `pip3 install grole`.
-
-License
--------
-
-MIT.
-
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
