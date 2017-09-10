@@ -16,7 +16,7 @@ import html
 from collections import defaultdict
 
 __author__ = 'witchard'
-__version__ = '0.1.1-dev'
+__version__ = '0.1.1'
 
 class Request:
     """

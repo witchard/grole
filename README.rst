@@ -7,6 +7,11 @@ It's loosely based on bottle and flask, but unlike them does not require a WSGI 
 
 A grole is a multi-spouted drinking vessel (https://en.wikipedia.org/wiki/Grole), which harks to this modules bottle/flask routes but with the ability to serve multiple drinkers at once!
 
+Documentation
+-------------
+
+See the doc folder, or visit http://grole.readthedocs.io/en/latest/.
+
 Example
 -------
 
