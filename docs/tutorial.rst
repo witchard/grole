@@ -17,6 +17,8 @@ Registering routes
 
 Routes are registered to a :class:`Grole` object by decorating a function with the :func:`Grole.route` decorator. The decorator function takes a regular expression as the path to match, an array of HTTP methods (GET, POST, etc), and whether you want this function in the API doc. Docstrings of functions in the API doc are available through `env['doc']` within the handler function.
 
+The order in which routes are registered is the order in which they will be tested when searching for a handler for a specific request.
+
 Handling requests
 -----------------
 
