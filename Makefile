@@ -1,6 +1,6 @@
 VERSION = $(shell python3 setup.py --version)
 
-.PHONY: help release clean doc showdoc
+.PHONY: help doc cleandoc showdoc release cleanrelease test clean
 
 help:
 	@echo "doc: Build documentation"
@@ -8,6 +8,7 @@ help:
 	@echo "showdoc: Show documentation in webbrowser"
 	@echo "release: Package and release to PyPI"
 	@echo "cleanrelease: Clean release packaging"
+	@echo "test: Run tests"
 	@echo "clean: Clean all"
 
 doc:
@@ -34,5 +35,9 @@ cleanrelease:
 	find . -name '*.pyo' -exec rm -f {} +
 	find . -name '*~' -exec rm -f {} +
 	find . -name '._*' -exec rm -f {} +
+
+test:
+	python3.5 -m unittest discover test
+	python3.6 -m unittest discover test
 
 clean: cleanrelease cleandoc
