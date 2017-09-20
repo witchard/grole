@@ -65,7 +65,7 @@ class TestBody(unittest.TestCase):
         res = grole.Response(['foo'])
         self.assertIsInstance(res.data, grole.ResponseJSON)
 
-    def test_json(self):
+    def test_file(self):
         res = grole.Response(grole.ResponseFile('foo'))
         self.assertIsInstance(res.data, grole.ResponseFile)
 
