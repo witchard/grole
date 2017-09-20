@@ -1,21 +1,8 @@
 import unittest
-import asyncio
-import io
 import pathlib
+from helpers import FakeWriter, a_wait
 
 import grole
-
-a_wait = asyncio.new_event_loop().run_until_complete
-
-class FakeWriter():
-    def __init__(self):
-        self.data = b''
-
-    async def drain(self):
-        return
-
-    def write(self, data):
-        self.data += data
 
 class TestHeader(unittest.TestCase):
 
