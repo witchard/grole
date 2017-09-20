@@ -16,7 +16,7 @@ import html
 from collections import defaultdict
 
 __author__ = 'witchard'
-__version__ = '0.1.1'
+__version__ = '0.1.2-dev'
 
 class Request:
     """
@@ -172,19 +172,21 @@ class ResponseFile(ResponseBody):
         """
         if content_type == None:
             content_type = mimetypes.guess_type(filename)[0]
-        self._file = io.FileIO(filename)
+        self.filename = filename
         self._headers = {'Transfer-Encoding': 'chunked',
                          'Content-Type': content_type}
 
     async def _write(self, writer):
+        f = io.FileIO(self.filename)
         while True:
-            data = self._file.read(io.DEFAULT_BUFFER_SIZE)
+            data = f.read(io.DEFAULT_BUFFER_SIZE)
             header = format(len(data), 'x') + '\r\n'
             writer.write(header.encode())
             writer.write(data)
             writer.write(b'\r\n')
             await writer.drain()
             if len(data) == 0:
+                f.close()
                 return # EOF
 
 class Response:
