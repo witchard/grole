@@ -9,6 +9,7 @@ help:
 	@echo "release: Package and release to PyPI"
 	@echo "cleanrelease: Clean release packaging"
 	@echo "test: Run tests"
+	@echo "coverage: Run coverage tests, requires coverage (pip install coverage)"
 	@echo "clean: Clean all"
 
 doc:
@@ -39,5 +40,9 @@ cleanrelease:
 test:
 	python3.5 -m unittest discover test
 	python3.6 -m unittest discover test
+
+coverage:
+	coverage run --include=grole.py -m unittest discover test
+	coverage report -m --fail-under=90
 
 clean: cleanrelease cleandoc
