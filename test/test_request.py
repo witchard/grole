@@ -72,14 +72,14 @@ class TestReading(unittest.TestCase):
             a_wait(self.req._buffer_body(reader))
 
     def test_header(self):
-        header = b'\r\n'.join([b'GET /foo?bar=baz&spam=eggs HTTP/1.1',
+        header = b'\r\n'.join([b'GET /foo?bar=baz&spam=eggs&chips HTTP/1.1',
                                b'foo: bar',
                                b''])
         a_wait(self.req._read(FakeReader(header)))
         self.assertEqual(self.req.method, 'GET')
         self.assertEqual(self.req.version, 'HTTP/1.1')
         self.assertEqual(self.req.path, '/foo')
-        self.assertEqual(self.req.query, {'bar': 'baz', 'spam': 'eggs'})
+        self.assertEqual(self.req.query, {'bar': 'baz', 'spam': 'eggs', 'chips': None})
         self.assertEqual(self.req.headers, {'foo': 'bar'})
         self.assertEqual(self.req.data, b'')
 
