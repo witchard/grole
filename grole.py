@@ -252,8 +252,12 @@ def serve_static(app, base_url, base_path, index=False):
         """
         Static files
         """
-        base = pathlib.Path(base_path).resolve()
-        path = (base / req.match.group(1)).resolve()
+        try:
+            base = pathlib.Path(base_path).resolve()
+            path = (base / req.match.group(1)).resolve()
+        except FileNotFoundError:
+            return Response(None, 404, 'Not Found')
+
 
         # Don't let bad paths through
         if base == path or base in path.parents:
