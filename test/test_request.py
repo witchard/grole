@@ -26,7 +26,7 @@ class TestReading(unittest.TestCase):
         self.assertEqual(line, b'foo\r\n')
 
     def test_readline_raises_eof(self):
-        reader = FakeReader(b'', True)
+        reader = FakeReader(b'')
         with self.assertRaises(EOFError):
             line = a_wait(self.req._readline(reader))
 
@@ -54,7 +54,7 @@ class TestReading(unittest.TestCase):
     def test_header(self):
         header = b'\r\n'.join([b'GET /foo?bar=baz&spam=eggs&chips HTTP/1.1',
                                b'foo: bar',
-                               b''])
+                               b'']) + b'\r\n'
         a_wait(self.req._read(FakeReader(header)))
         self.assertEqual(self.req.method, 'GET')
         self.assertEqual(self.req.version, 'HTTP/1.1')

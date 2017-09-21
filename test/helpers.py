@@ -4,9 +4,9 @@ import io
 a_wait = asyncio.new_event_loop().run_until_complete
 
 class FakeReader():
-    def __init__(self, data=b'', eof=False):
+    def __init__(self, data=b''):
         self.io = io.BytesIO(data)
-        self.eof = eof
+        self.len = len(data)
 
     async def readline(self):
         return self.io.readline()
@@ -18,7 +18,7 @@ class FakeReader():
         return data
 
     def at_eof(self):
-        return self.eof
+        return self.io.tell() == self.len
 
 class FakeWriter():
     def __init__(self):
@@ -29,3 +29,6 @@ class FakeWriter():
 
     def write(self, data):
         self.data += data
+
+    def get_extra_info(self, arg):
+        return 'fake'
