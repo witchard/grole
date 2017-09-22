@@ -13,6 +13,8 @@ import io
 import mimetypes
 import pathlib
 import html
+import sys
+import argparse
 from collections import defaultdict
 
 __author__ = 'witchard'
@@ -399,8 +401,29 @@ class Grole:
         loop.run_until_complete(server.wait_closed())
         loop.close()
 
+def parse_args(args=sys.argv[1:]):
+    """
+    Parse command line arguments for Grole server running as static file server
+    """
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-a', '--address', help='address to listen on, default localhost',
+                                default='localhost')
+    parser.add_argument('-p', '--port', help='port to listen on, default 1234',
+                                default=1234, type=int)
+    parser.add_argument('-d', '--directory', help='directory to serve, default .',
+                                default='.')
+    parser.add_argument('-n', '--noindex', help='do not show directory indexes',
+                                default=False, action='store_true')
+    return parser.parse_args(args)
+
+def main(args=sys.argv[1:]):
+    """
+    Run Grole static file server
+    """
+    args = parse_args(args)
+    app = Grole()
+    serve_static(app, '', args.directory, not args.noindex)
+    app.run(args.address, args.port)
 
 if __name__ == '__main__':
-    app = Grole()
-    serve_static(app, '', '.', True)
-    app.run()
+    main()
