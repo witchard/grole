@@ -16,7 +16,6 @@ def simple_server():
 
     app.run()
 
-
 class TestServe(unittest.TestCase):
 
     def test_simple(self):
@@ -27,3 +26,14 @@ class TestServe(unittest.TestCase):
                html = response.read()
                self.assertEqual(html, b'Hello, World!')
         p.terminate()
+
+    def test_fileserver(self):
+        p = multiprocessing.Process(target=grole.main, args=[[]])
+        p.start()
+        time.sleep(0.1)
+        with urllib.request.urlopen('http://localhost:1234/test/test.dat') as response:
+               html = response.read()
+               self.assertEqual(html, b'foo\n')
+        p.terminate()
+
+
