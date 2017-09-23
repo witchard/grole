@@ -416,14 +416,24 @@ def parse_args(args=sys.argv[1:]):
                                 default='.')
     parser.add_argument('-n', '--noindex', help='do not show directory indexes',
                                 default=False, action='store_true')
+    loglevel = parser.add_mutually_exclusive_group()
+    loglevel.add_argument('-v', '--verbose', help='verbose logging',
+                                default=False, action='store_true')
+    loglevel.add_argument('-q', '--quiet', help='quiet logging',
+                                default=False, action='store_true')
     return parser.parse_args(args)
 
 def main(args=sys.argv[1:]):
     """
     Run Grole static file server
     """
-    logging.basicConfig(level=logging.INFO)
     args = parse_args(args)
+    if args.verbose:
+        logging.basicConfig(level=logging.DEBUG)
+    elif args.quiet:
+        logging.basicConfig(level=logging.ERROR)
+    else:
+        logging.basicConfig(level=logging.INFO)
     app = Grole()
     serve_static(app, '', args.directory, not args.noindex)
     app.run(args.address, args.port)
