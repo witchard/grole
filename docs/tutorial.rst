@@ -8,7 +8,7 @@ Getting started
 
 By default, grole will run a simple static file server in the current directory. To use this simply execute `grole.py`, or run `python -m grole`.
 
-To serve your own functions, you first need a :class:`Grole` object. The constructor accepts a `env` variable which is passed to your handler functions such that you can share state between them.
+To serve your own functions, you first need a :class:`Grole` object. The constructor accepts a `env` variable which is passed to your handler functions such that you can share state between them. Logging is done by the python logging module, if you want logging then run `logging.basicConfig(level=logging.INFO)`.
 
 Once you have setup handler functions for your web API, you can then launch the server with :func:`Grole.run`. This takes the host and port to serve on and does not return until interrupted.
 
