@@ -13,6 +13,9 @@ Grole
 .. image:: https://readthedocs.org/projects/grole/badge/?version=latest
     :target: https://grole.readthedocs.io
 
+.. image:: https://img.shields.io/travis/witchard/grole.svg
+    :target: https://travis-ci.org/witchard/grole
+
 Grole is a python (3.5+) nano web framework based on asyncio. It's goals are to be simple, embedable (single file and standard library only) and easy to use. The authors intention is that it should support standing up quick and dirty web based APIs.
 
 It's loosely based on bottle and flask, but unlike them does not require a WSGI capable server to handle more than one request at once. Sanic is similar, but it does not meet the embedable use-case.
