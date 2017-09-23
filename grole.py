@@ -15,6 +15,7 @@ import pathlib
 import html
 import sys
 import argparse
+import logging
 from collections import defaultdict
 
 __author__ = 'witchard'
@@ -310,6 +311,7 @@ class Grole:
         self._handlers = defaultdict(list)
         self.env = {'doc': []}
         self.env.update(env)
+        self._logger = logging.getLogger('grole')
 
     def route(self, path_regex, methods=['GET'], doc=True):
         """
@@ -338,7 +340,7 @@ class Grole:
         Parses requests, finds appropriate handlers and returns responses
         """
         peer = writer.get_extra_info('peername')
-        print('New connection from {}'.format(peer))
+        self._logger.debug('New connection from {}'.format(peer))
         try:
             # Loop handling requests
             while True:
@@ -361,7 +363,7 @@ class Grole:
                                 res = Response(data=res)
                         except:
                             # Error - log it and return 500
-                            traceback.print_exc()
+                            self._logger.error(traceback.format_exc())
                             res = Response(code=500, reason='Internal Server Error')
                         break
 
@@ -371,9 +373,9 @@ class Grole:
 
                 # Respond
                 await res._write(writer)
-                print('{}: {} -> {}'.format(peer, req.path,  res.code))
+                self._logger.info('{}: {} -> {}'.format(peer, req.path,  res.code))
         except EOFError:
-            print('Connection closed from {}'.format(peer))
+            self._logger.debug('Connection closed from {}'.format(peer))
 
     def run(self, host='localhost', port=1234):
         """
@@ -390,7 +392,7 @@ class Grole:
         server = loop.run_until_complete(coro)
 
         # Run the server
-        print('Serving on {}'.format(server.sockets[0].getsockname()))
+        self._logger.info('Serving on {}'.format(server.sockets[0].getsockname()))
         try:
             loop.run_forever()
         except KeyboardInterrupt:
@@ -420,6 +422,7 @@ def main(args=sys.argv[1:]):
     """
     Run Grole static file server
     """
+    logging.basicConfig(level=logging.INFO)
     args = parse_args(args)
     app = Grole()
     serve_static(app, '', args.directory, not args.noindex)
