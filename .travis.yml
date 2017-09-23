@@ -3,6 +3,9 @@ python:
   - "3.5"
   - "3.6"
   - "3.7-dev" # 3.7 development branch
-# command to run tests
+before_script:
+  - pip install coveralls coverage
 script:
-  - python -m unittest discover test
+  - coverage run --include=grole.py -m unittest discover test
+after_success:
+  - coveralls
