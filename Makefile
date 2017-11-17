@@ -38,8 +38,7 @@ cleanrelease:
 	find . -name '._*' -exec rm -f {} +
 
 test:
-	python3.5 -m unittest discover test
-	python3.6 -m unittest discover test
+	python3 -m unittest discover test
 
 coverage:
 	coverage run --include=grole.py -m unittest discover test
