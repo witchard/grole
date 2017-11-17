@@ -376,6 +376,9 @@ class Grole:
                 self._logger.info('{}: {} -> {}'.format(peer, req.path,  res.code))
         except EOFError:
             self._logger.debug('Connection closed from {}'.format(peer))
+        except Exception as e:
+            self._logger.error('Connection error ({}) from {}'.format(e, peer))
+            writer.close()
 
     def run(self, host='localhost', port=1234):
         """
