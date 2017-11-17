@@ -1,6 +1,6 @@
 import unittest
 import pathlib
-from helpers import FakeReader, FakeWriter, a_wait
+from helpers import *
 
 import grole
 
@@ -42,6 +42,18 @@ class TestGrole(unittest.TestCase):
         a_wait(self.app._handle(rd, wr))
         data = wr.data.split(b'\r\n')[0]
         self.assertEqual(b'HTTP/1.1 500 Internal Server Error', data)
+
+    def test_close_big_error(self):
+        @self.app.route('/')
+        def error(env, req):
+            a = []
+            return a[1]
+
+        rd = FakeReader(data=b'GET / HTTP/1.1\r\n\r\n')
+        wr = ErrorWriter()
+        a_wait(self.app._handle(rd, wr))
+        self.assertTrue(wr.closed)
+
 
     def test_404(self):
         rd = FakeReader(data=b'GET / HTTP/1.1\r\n\r\n')

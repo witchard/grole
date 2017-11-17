@@ -32,3 +32,19 @@ class FakeWriter():
 
     def get_extra_info(self, arg):
         return 'fake'
+
+class ErrorWriter():
+    def __init__(self):
+        self.closed = False
+
+    async def drain(self):
+        return
+
+    def write(self, data):
+        raise Exception('Broken')
+
+    def get_extra_info(self, arg):
+        return 'fake'
+
+    def close(self):
+        self.closed = True

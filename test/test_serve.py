@@ -36,4 +36,11 @@ class TestServe(unittest.TestCase):
                self.assertEqual(html, b'foo\n')
         p.terminate()
 
+    def test_https(self):
+        p = multiprocessing.Process(target=simple_server)
+        p.start()
+        time.sleep(0.1)
+        self.assertRaises(urllib.error.URLError)
+        p.terminate()
+
 
