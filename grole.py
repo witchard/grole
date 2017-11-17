@@ -19,7 +19,7 @@ import logging
 from collections import defaultdict
 
 __author__ = 'witchard'
-__version__ = '0.2.0'
+__version__ = '0.2.1'
 
 class Request:
     """
