@@ -392,7 +392,11 @@ class Grole:
         # Setup loop
         loop = asyncio.get_event_loop()
         coro = asyncio.start_server(self._handle, host, port, loop=loop)
-        server = loop.run_until_complete(coro)
+        try:
+            server = loop.run_until_complete(coro)
+        except Exception as e:
+            self._logger.error('Could not launch server: {}'.format(e))
+            return
 
         # Run the server
         self._logger.info('Serving on {}'.format(server.sockets[0].getsockname()))
