@@ -43,8 +43,8 @@ class Request:
         """
         start_line = await self._readline(reader)
         self.method, self.location, self.version = start_line.decode().split()
-        path_query = self.location.split('?', 1)
-        self.path = urllib.parse.unquote(path_query[0])
+        path_query = urllib.parse.unquote(self.location).split('?', 1)
+        self.path = path_query[0]
         self.query = {}
         if len(path_query) > 1:
             for q in path_query[1].split('&'):
