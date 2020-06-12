@@ -19,7 +19,7 @@ import logging
 from collections import defaultdict
 
 __author__ = 'witchard'
-__version__ = '0.2.2'
+__version__ = '0.3.0'
 
 class Request:
     """
@@ -380,7 +380,7 @@ class Grole:
             self._logger.error('Connection error ({}) from {}'.format(e, peer))
             writer.close()
 
-    def run(self, host='localhost', port=1234):
+    def run(self, host='localhost', port=1234, ssl_context=None):
         """
         Launch the server. Will run forever accepting connections until interrupted.
 
@@ -388,10 +388,11 @@ class Grole:
 
             * host: The host to listen on
             * port: The port to listen on
+            * ssl_context: The SSL context passed to asyncio
         """
         # Setup loop
         loop = asyncio.get_event_loop()
-        coro = asyncio.start_server(self._handle, host, port, loop=loop)
+        coro = asyncio.start_server(self._handle, host, port, loop=loop, ssl=ssl_context)
         try:
             server = loop.run_until_complete(coro)
         except Exception as e:
