@@ -106,5 +106,29 @@ class TestFile(unittest.TestCase):
         self.assertEqual(writer.data, b'4\r\nfoo\n\r\n0\r\n\r\n')
 
 
+class TestAuto(unittest.TestCase):
+
+    def test_empty(self):
+        res = grole.Response()
+        self.assertTrue(isinstance(res.data, grole.ResponseBody))
+
+    def test_bytes(self):
+        res = grole.Response(b'foo')
+        self.assertTrue(isinstance(res.data, grole.ResponseBody))
+        self.assertEqual(res.data._data, b'foo')
+        self.assertEqual(res.data._headers['Content-Type'], 'text/plain')
+
+    def test_str(self):
+        res = grole.Response('foo')
+        self.assertTrue(isinstance(res.data, grole.ResponseString))
+        self.assertEqual(res.data._data, b'foo')
+        self.assertEqual(res.data._headers['Content-Type'], 'text/html')
+
+    def test_json(self):
+        res = grole.Response({'foo': 'bar'})
+        self.assertTrue(isinstance(res.data, grole.ResponseJSON))
+        self.assertEqual(res.data._data, b'{"foo": "bar"}')
+        self.assertEqual(res.data._headers['Content-Type'], 'application/json')
+
 if __name__ == '__main__':
     unittest.main()
