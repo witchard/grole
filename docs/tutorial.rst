@@ -51,7 +51,7 @@ Responding
 In-built python types returned by registered request handlers are automatically converted into 200 OK HTTP responses. The following mappings apply:
 
 * bytes: Sent directly with content type text/plain
-* string: Encoded as bytes and sent with content type text/plain
+* string: Encoded as bytes and sent with content type text/html
 * others: Encoded as json and sent with content type application/json
 
 Finer grained control of the response data can be achieved using :class:`ResponseBody` or one of it's children. These allow for overriding of the content type. The following are available:

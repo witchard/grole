@@ -132,7 +132,7 @@ class ResponseString(ResponseBody):
     """
     Response body from a string
     """
-    def __init__(self, data='', content_type='text/plain'):
+    def __init__(self, data='', content_type='text/html'):
         """
         Initialise object, data is the data to send
     
