@@ -4,8 +4,7 @@ python:
   - "3.6"
   - "3.7"
   - "3.8"
-  - "3.8-dev" # 3.8 development branch
-  - "nightly"
+  - "3.9"
 before_script:
   - pip install coveralls coverage
 script:
